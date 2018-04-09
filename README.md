@@ -1,5 +1,5 @@
 # xboxclips
-A simple php script do download all your saves clips
+A simple php script do download all your saved clips from Xbox Live
 
 ### Project dependencies:
 
