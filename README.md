@@ -1,6 +1,11 @@
 # xboxclips
 A simple php script do download all your saves clips
 
+### Project dependencies:
+
+* PHP >= 5.5
+* [Composer](https://getcomposer.org)
+
 ### Setup the configuration
 
 1. In the config directory, copy the file `options.ini.dist` to `options.ini`
