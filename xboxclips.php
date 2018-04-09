@@ -1,7 +1,7 @@
 #!/usr/bin/php
 <?php
 	date_default_timezone_set ( "Europe/Lisbon" );
-	$date = new DateTime("2020-01-01T00:00:00Z");
+	$date = new DateTime("2077-07-07T07:07:07Z");
 	error_reporting(E_ALL & ~E_USER_DEPRECATED);
 
 	define('BASE_PATH',realpath(dirname(realpath(__FILE__))  ));
