@@ -10,12 +10,8 @@ gameClipId[] = *
 ;gameClipId[] = Destiny 2
 
 ;use full path
-destination = /tmp
+destination = DIRECTORY
 ;see https://secure.php.net/sprintf for format options, s the placeholder for an incremental counter,
 ; or use original for the xlive original filename
 file_format = %04s
 ;file_format = original
-
-[log]
-file = import_:Y:m:d.log
-silent = false
