@@ -1,0 +1,14 @@
+{
+    "name": "zendframework/skeleton-application",
+    "description": "Skeleton Application for ZF2",
+    "license": "BSD-3-Clause",
+    "keywords": [
+        "framework",
+        "zf2"
+    ],
+    "require": {
+        "php": ">=5.5",
+        "phpFastCache/phpFastCache": "^5.0",
+        "guzzlehttp/guzzle": "^6.3"
+    }
+}
