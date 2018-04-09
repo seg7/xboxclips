@@ -6,7 +6,19 @@
 
 	define('BASE_PATH',realpath(dirname(realpath(__FILE__))  ));
 
+    if(!file_exists(BASE_PATH . '/vendor'))
+        die('Please use `composer install`.');
+
+    if(!file_exists(BASE_PATH . '/config/options.ini'))
+        die('In the config directory, copy the file `options.ini.dist` to `options.ini`.');
+
     $options = parse_ini_file ( BASE_PATH . '/config/options.ini', true );
+
+    if($options['xbl.io']['apikey'] == 'APIKEY')
+        die('Add your key to options.ini under the apikey (APIKEY).');
+
+    if($options['xbox']['destination'] == 'DIRECTORY')
+        die('Edit options.ini with the output path (DIRECTORY).');
 
 	require realpath(dirname(__FILE__) . '/vendor/autoload.php');
 
@@ -21,12 +33,12 @@
 	echo "Downloading file list...\n";
 
 	try {
-		$client = new GuzzleHttp\Client(['base_uri' => $GLOBALS['options']['xbl.io']['base_uri']]);
+		$client = new GuzzleHttp\Client(['base_uri' => $options['xbl.io']['base_uri']]);
 
 		$request = $client->request('GET', 'dvr/gameclips', [
 	    	'headers' => [
 	        	'Accept'          => 'application/json',
-	        	'X-Authorization' => $GLOBALS['options']['xbl.io']['apikey'],
+	        	'X-Authorization' => $options['xbl.io']['apikey'],
 	    	]
 		]);
 
