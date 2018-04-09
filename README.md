@@ -14,3 +14,5 @@ A simple php script do download all your saves clips
 4. Add your key to `options.ini` under the `apikey`
 5. `composer install`
 6. `php xboxclips.php`
+
+![Output](https://github.com/seg7/xboxclips/blob/master/ouput.png?raw=true)
