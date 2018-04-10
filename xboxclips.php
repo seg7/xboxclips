@@ -26,6 +26,7 @@ if ($options['xbox']['destination'] === 'DIRECTORY') {
 
 require BASE_PATH . '/vendor/autoload.php';
 
+use GuzzleHttp\Exception\GuzzleException;
 use phpFastCache\CacheManager;
 
 CacheManager::setDefaultConfig([
@@ -51,7 +52,7 @@ try {
     ]);
 
     $json = @json_decode($request->getBody(), true)['gameClips'];
-} catch (\GuzzleHttp\Exception\GuzzleException $e) {
+} catch (GuzzleException $e) {
     die($e->getMessage());
 }
 
