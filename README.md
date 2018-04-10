@@ -1,5 +1,5 @@
 # xboxclips
-A simple php script do download all your saved clips from Xbox Live
+A simple php script do download all your saved clips from Xbox Live. It picks up next time you run it, good for cron jobs.
 
 ### Project dependencies:
 
