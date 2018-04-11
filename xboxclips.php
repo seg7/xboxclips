@@ -39,9 +39,15 @@ try {
     die($e->getMessage());
 }
 
-echo "Downloading file list...\n";
-
 try {
+    CacheManager::setDefaultConfig([
+        'path' => BASE_PATH . '/cache/',
+    ]);
+
+    $InstanceCache = CacheManager::getInstance('files');
+
+    echo "Downloading file list...\n";
+
     $client = new GuzzleHttp\Client(['base_uri' => $options['xbl.io']['base_uri']]);
 
     $request = $client->request('GET', 'dvr/gameclips', [
@@ -52,7 +58,7 @@ try {
     ]);
 
     $json = @json_decode($request->getBody(), true)['gameClips'];
-} catch (GuzzleException $e) {
+} catch (\phpFastCache\Exceptions\phpFastCacheDriverCheckException | GuzzleException $e) {
     die($e->getMessage());
 }
 

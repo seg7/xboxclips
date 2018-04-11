@@ -1,13 +1,12 @@
 {
-    "name": "zendframework/skeleton-application",
-    "description": "Skeleton Application for ZF2",
+    "name": "seg7/xboxclips",
+    "description": "A simple php script do download all your saved clips from Xbox Live.",
     "license": "BSD-3-Clause",
     "keywords": [
-        "framework",
-        "zf2"
+        "xbox"
     ],
     "require": {
-        "php": ">=5.5",
+        "php": ">=7.1",
         "phpFastCache/phpFastCache": "^5.0",
         "guzzlehttp/guzzle": "^6.3"
     }

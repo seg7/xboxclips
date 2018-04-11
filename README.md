@@ -3,7 +3,7 @@ A simple php script do download all your saved clips from Xbox Live. It picks up
 
 ### Project dependencies:
 
-* PHP >= 5.5
+* PHP >= 7.1
 * [Composer](https://getcomposer.org)
 
 ### Setup the configuration
