@@ -29,16 +29,6 @@ require BASE_PATH . '/vendor/autoload.php';
 use GuzzleHttp\Exception\GuzzleException;
 use phpFastCache\CacheManager;
 
-CacheManager::setDefaultConfig([
-    'path' => BASE_PATH . '/cache/',
-]);
-
-try {
-    $InstanceCache = CacheManager::getInstance('files');
-} catch (\phpFastCache\Exceptions\phpFastCacheDriverCheckException $e) {
-    die($e->getMessage());
-}
-
 try {
     CacheManager::setDefaultConfig([
         'path' => BASE_PATH . '/cache/',
@@ -58,25 +48,27 @@ try {
     ]);
 
     $json = @json_decode($request->getBody(), true)['gameClips'];
+
+    $json = null === $json ? die('No valid JSON.') : array_reverse($json);
+
+    $cache = [
+        'json' => $InstanceCache->getItem('json'),
+        'gameClipIds' => $InstanceCache->getItem('gameClipIds'),
+        'counter' => $InstanceCache->getItem('counter'),
+    ];
+
+    $json_cached = null === $cache['json']->get() ? [] : $cache['json']->get();
+    if (array_column($json, 'gameClipId') === $json_cached) {
+        die('Nothing to update!');
+    }
+
+    $gameClipIds_cached = null === $cache['gameClipIds']->get() ? [] : $cache['gameClipIds']->get();
+    $counter = null === $cache['counter']->get() ? 0 : $cache['counter']->get();
+
+    $gameClipIds = $gameClipIds_cached;
 } catch (\phpFastCache\Exceptions\phpFastCacheDriverCheckException | GuzzleException $e) {
     die($e->getMessage());
 }
-
-$json = null === $json ? die('No valid JSON.') : array_reverse($json);
-
-$cache['json'] = $InstanceCache->getItem('json');
-$json_cached = null === $cache['json']->get() ? [] : $cache['json']->get();
-if (array_column($json, 'gameClipId') === $json_cached) {
-    die('Nothing to update!');
-}
-
-$cache['gameClipIds'] = $InstanceCache->getItem('gameClipIds');
-$cache['counter'] = $InstanceCache->getItem('counter');
-
-$gameClipIds_cached = null === $cache['gameClipIds']->get() ? [] : $cache['gameClipIds']->get();
-$counter = null === $cache['counter']->get() ? 0 : $cache['counter']->get();
-
-$gameClipIds = $gameClipIds_cached;
 
 foreach ($json as $item) {
     if (!in_array($item['gameClipId'], $gameClipIds_cached, false) &&
