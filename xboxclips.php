@@ -57,17 +57,11 @@ try {
         'counter' => $InstanceCache->getItem('counter'),
     ];
 
-    $json_cached = null === $cache['json']->get()
-        ? []
-        : $cache['json']->get();
+    $json_cached = $cache['json']->get() ?? [];
 
-    $gameClipIds_cached = null === $cache['gameClipIds']->get()
-        ? []
-        : $cache['gameClipIds']->get();
+    $gameClipIds_cached = $cache['gameClipIds']->get() ?? [];
 
-    $counter = null === $cache['counter']->get()
-        ? 0
-        : $cache['counter']->get();
+    $counter = $cache['counter']->get() ?? 0;
 
     $gameClipIds = $gameClipIds_cached;
 
