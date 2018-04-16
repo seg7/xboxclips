@@ -57,15 +57,24 @@ try {
         'counter' => $InstanceCache->getItem('counter'),
     ];
 
-    $json_cached = null === $cache['json']->get() ? [] : $cache['json']->get();
+    $json_cached = null === $cache['json']->get()
+        ? []
+        : $cache['json']->get();
+
+    $gameClipIds_cached = null === $cache['gameClipIds']->get()
+        ? []
+        : $cache['gameClipIds']->get();
+
+    $counter = null === $cache['counter']->get()
+        ? 0
+        : $cache['counter']->get();
+
+    $gameClipIds = $gameClipIds_cached;
+
     if (array_column($json, 'gameClipId') === $json_cached) {
         die('Nothing to update!');
     }
 
-    $gameClipIds_cached = null === $cache['gameClipIds']->get() ? [] : $cache['gameClipIds']->get();
-    $counter = null === $cache['counter']->get() ? 0 : $cache['counter']->get();
-
-    $gameClipIds = $gameClipIds_cached;
 } catch (\phpFastCache\Exceptions\phpFastCacheDriverCheckException | GuzzleException $e) {
     die($e->getMessage());
 }
@@ -82,7 +91,10 @@ foreach ($json as $item) {
         $gameClipIds[] = $item['gameClipId'];
         $uri = $item['gameClipUris']['0']['uri'];
         echo "{$item['gameClipId']}->${destination}...\n";
-        if (!file_exists($options['xbox']['destination']) && !mkdir($options['xbox']['destination'], 0777, true) && !is_dir($options['xbox']['destination'])) {
+        if (!file_exists($options['xbox']['destination'])
+            && !mkdir($options['xbox']['destination'], 0777, true)
+            && !is_dir($options['xbox']['destination'])
+        ) {
             throw new \RuntimeException(sprintf('Directory "%s" was not created', $options['xbox']['destination']));
         }
         if (!file_exists($options['xbox']['destination'] . '/' . $destination)) {
