@@ -60,7 +60,7 @@ try {
 
     } while(--$retries > 0);
 
-    $json = array_reverse($json);
+    $json = null === $json ? die('No valid JSON.') : array_reverse($json);
 
     $cache = [
         'json' => $InstanceCache->getItem('json'),
