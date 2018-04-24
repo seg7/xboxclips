@@ -1,6 +1,7 @@
 [xbl.io]
 base_uri = https://xbl.io/api/v2/
 apikey = APIKEY
+retries = 1
 
 [xbox]
 ; Use * for all clips or specify the games one per each line

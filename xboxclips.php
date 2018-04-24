@@ -40,16 +40,27 @@ try {
 
     $client = new GuzzleHttp\Client(['base_uri' => $options['xbl.io']['base_uri']]);
 
-    $request = $client->request('GET', 'dvr/gameclips', [
-        'headers' => [
-            'Accept' => 'application/json',
-            'X-Authorization' => $options['xbl.io']['apikey'],
-        ]
-    ]);
+    $retries = $options['xbl.io']['retries'];
 
-    $json = @json_decode($request->getBody(), true)['gameClips'];
+    do {
 
-    $json = null === $json ? die('No valid JSON.') : array_reverse($json);
+        $request = $client->request('GET', 'dvr/gameclips', [
+            'headers' => [
+                'Accept' => 'application/json',
+                'X-Authorization' => $options['xbl.io']['apikey'],
+            ]
+        ]);
+
+        $json = @json_decode($request->getBody(), true)['gameClips'];
+
+        if(null === $json) {
+            sleep(5);
+            $retries++;
+        }
+
+    } while(--$retries > 0);
+
+    $json = array_reverse($json);
 
     $cache = [
         'json' => $InstanceCache->getItem('json'),
