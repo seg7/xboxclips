@@ -27,14 +27,13 @@ if ($options['xbox']['destination'] === 'DIRECTORY') {
 require BASE_PATH . '/vendor/autoload.php';
 
 use GuzzleHttp\Exception\GuzzleException;
-use phpFastCache\CacheManager;
+use phpFastCache\Helper\Psr16Adapter;
 
 try {
-    CacheManager::setDefaultConfig([
+    $Psr16Adapter = new Psr16Adapter('files', [
         'path' => BASE_PATH . '/cache/',
+        'defaultTtl' => 86400,
     ]);
-
-    $InstanceCache = CacheManager::getInstance('files');
 
     echo "Downloading file list...\n";
 
@@ -63,56 +62,45 @@ try {
     $json = null === $json ? die('No valid JSON.') : array_reverse($json);
 
     $cache = [
-        'json' => $InstanceCache->getItem('json'),
-        'gameClipIds' => $InstanceCache->getItem('gameClipIds'),
-        'counter' => $InstanceCache->getItem('counter'),
+        'json' => $Psr16Adapter->get('json', []),
+        'gameClipIds' => $Psr16Adapter->get('gameClipIds', []),
+        'counter' => $Psr16Adapter->get('counter', 0),
     ];
 
-    $json_cached = $cache['json']->get() ?? [];
 
-    $gameClipIds_cached = $cache['gameClipIds']->get() ?? [];
-
-    $counter = $cache['counter']->get() ?? 0;
-
-    $gameClipIds = $gameClipIds_cached;
-
-    if (array_column($json, 'gameClipId') === $json_cached) {
+    if (array_column($json, 'gameClipId') === $cache['json']) {
         die('Nothing to update!');
     }
 
-} catch (\phpFastCache\Exceptions\phpFastCacheDriverCheckException | GuzzleException $e) {
-    die($e->getMessage());
-}
-
-foreach ($json as $item) {
-    if (!in_array($item['gameClipId'], $gameClipIds_cached, false) &&
-        (in_array($item['titleName'], $options['xbox']['gameClipId'], false)
-            || in_array('*', $options['xbox']['gameClipId'], false))
-    ) {
-        $counter++;
-        $destination = $options['xbox']['file_format'] === 'original'
-            ? "{$item['gameClipId']}.mp4"
-            : sprintf("{$options['xbox']['file_format']}.mp4", $counter);
-        $gameClipIds[] = $item['gameClipId'];
-        $uri = $item['gameClipUris']['0']['uri'];
-        echo "{$item['gameClipId']}->${destination}...\n";
-        if (!file_exists($options['xbox']['destination'])
-            && !mkdir($options['xbox']['destination'], 0777, true)
-            && !is_dir($options['xbox']['destination'])
+    foreach ($json as $item) {
+        if (!in_array($item['gameClipId'], $cache['gameClipIds'], false) &&
+            (in_array($item['titleName'], $options['xbox']['gameClipId'], false)
+                || in_array('*', $options['xbox']['gameClipId'], false))
         ) {
-            throw new \RuntimeException(sprintf('Directory "%s" was not created', $options['xbox']['destination']));
-        }
-        if (!file_exists($options['xbox']['destination'] . '/' . $destination)) {
-            file_put_contents($options['xbox']['destination'] . '/' . $destination, fopen($uri, 'rb'));
+            $cache['counter']++;
+            $destination = $options['xbox']['file_format'] === 'original'
+                ? "{$item['gameClipId']}.mp4"
+                : sprintf("{$options['xbox']['file_format']}.mp4", $cache['counter']);
+            $cache['gameClipIds'][] = $item['gameClipId'];
+            $uri = $item['gameClipUris']['0']['uri'];
+            echo "{$item['gameClipId']}->${destination}...\n";
+            if (!file_exists($options['xbox']['destination'])
+                && !mkdir($options['xbox']['destination'], 0777, true)
+                && !is_dir($options['xbox']['destination'])
+            ) {
+                throw new \RuntimeException(sprintf('Directory "%s" was not created', $options['xbox']['destination']));
+            }
+            if (!file_exists($options['xbox']['destination'] . '/' . $destination)) {
+                file_put_contents($options['xbox']['destination'] . '/' . $destination, fopen($uri, 'rb'));
+            }
         }
     }
+
+    $Psr16Adapter->set('json', array_column($json, 'gameClipId'), $date);
+    $Psr16Adapter->set('gameClipIds', $cache['gameClipIds'], $date);
+    $Psr16Adapter->set('counter', $cache['counter'], $date);
+
+} catch (
+    Exception | GuzzleException $e) {
+    die($e->getMessage());
 }
-
-$cache['gameClipIds']->set($gameClipIds)->expiresAt($date);
-$InstanceCache->save($cache['gameClipIds']);
-
-$cache['counter']->set($counter)->expiresAt($date);
-$InstanceCache->save($cache['counter']);
-
-$cache['json']->set(array_column($json, 'gameClipId'))->expiresAt($date);
-$InstanceCache->save($cache['json']);
