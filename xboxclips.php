@@ -59,15 +59,17 @@ try {
 
     $gameClips = null === $gameClips ? die('No valid JSON.') : array_reverse($gameClips);
 
+    $hash = md5(json_encode(array_column($gameClips, 'gameClipId'))); //Request Hash
+
     $cache = [ //Get Cache
         'hash'        => $Psr16Adapter->get('hash', ''),
         'gameClipIds' => $Psr16Adapter->get('gameClipIds', []),
         'counter'     => $Psr16Adapter->get('counter', 0),
     ];
 
-    $cache['hash'] = md5(json_encode(array_column($gameClips, 'gameClipId'))) === $cache['hash']
+    $cache['hash'] = $hash === $cache['hash']
         ? die('Nothing to update!')
-        : md5(json_encode(array_column($gameClips, 'gameClipId')));
+        : $hash;
 
     foreach ($gameClips as $gameClip) {
         if (!in_array($gameClip['gameClipId'], $cache['gameClipIds'], false) &&
@@ -98,7 +100,6 @@ try {
         'gameClipIds' => $cache['gameClipIds'],
         'counter'     => $cache['counter'],
     ], $date);
-} catch (
-    Exception | GuzzleException $e) {
+} catch (Exception | GuzzleException $e) {
     die($e->getMessage());
 }
