@@ -30,8 +30,8 @@ use GuzzleHttp\Exception\GuzzleException;
 use phpFastCache\Helper\Psr16Adapter;
 
 try {
-    $Psr16Adapter = new Psr16Adapter('files', [
-        'path' => BASE_PATH . '/cache/',
+    $Psr16Adapter = new Psr16Adapter('files', [ //Init cache
+        'path'       => BASE_PATH . '/cache/',
         'defaultTtl' => 86400,
     ]);
 
@@ -42,10 +42,9 @@ try {
     $retries = $options['xbl.io']['retries'];
 
     do {
-
         $request = $client->request('GET', 'dvr/gameclips', [
             'headers' => [
-                'Accept' => 'application/json',
+                'Accept'          => 'application/json',
                 'X-Authorization' => $options['xbl.io']['apikey'],
             ]
         ]);
@@ -56,21 +55,19 @@ try {
             sleep(5);
             $retries++;
         }
-
     } while(--$retries > 0);
 
     $json = null === $json ? die('No valid JSON.') : array_reverse($json);
 
-    $cache = [
-        'json' => $Psr16Adapter->get('json', []),
+    $cache = [ //Get Cache
+        'json'        => $Psr16Adapter->get('json', []),
         'gameClipIds' => $Psr16Adapter->get('gameClipIds', []),
-        'counter' => $Psr16Adapter->get('counter', 0),
+        'counter'     => $Psr16Adapter->get('counter', 0),
     ];
 
-
-    if (array_column($json, 'gameClipId') === $cache['json']) {
-        die('Nothing to update!');
-    }
+    $cache['json'] = array_column($json, 'gameClipId') === $cache['json']
+        ? die('Nothing to update!')
+        : array_column($json, 'gameClipId');
 
     foreach ($json as $item) {
         if (!in_array($item['gameClipId'], $cache['gameClipIds'], false) &&
@@ -96,10 +93,11 @@ try {
         }
     }
 
-    $Psr16Adapter->set('json', array_column($json, 'gameClipId'), $date);
-    $Psr16Adapter->set('gameClipIds', $cache['gameClipIds'], $date);
-    $Psr16Adapter->set('counter', $cache['counter'], $date);
-
+    $Psr16Adapter->setMultiple([ //Save Cache
+        'json'        => $cache['json'],
+        'gameClipIds' => $cache['gameClipIds'],
+        'counter'     => $cache['counter'],
+    ], $date);
 } catch (
     Exception | GuzzleException $e) {
     die($e->getMessage());
