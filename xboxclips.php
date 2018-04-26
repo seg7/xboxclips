@@ -49,38 +49,38 @@ try {
             ]
         ]);
 
-        $json = @json_decode($request->getBody(), true)['gameClips'];
+        $gameClips = @json_decode($request->getBody(), true)['gameClips'];
 
-        if(null === $json) {
+        if(null === $gameClips) {
             sleep(5);
             $retries++;
         }
     } while(--$retries > 0);
 
-    $json = null === $json ? die('No valid JSON.') : array_reverse($json);
+    $gameClips = null === $gameClips ? die('No valid JSON.') : array_reverse($gameClips);
 
     $cache = [ //Get Cache
-        'json'        => $Psr16Adapter->get('json', []),
+        'hash'        => $Psr16Adapter->get('hash', ''),
         'gameClipIds' => $Psr16Adapter->get('gameClipIds', []),
         'counter'     => $Psr16Adapter->get('counter', 0),
     ];
 
-    $cache['json'] = array_column($json, 'gameClipId') === $cache['json']
+    $cache['hash'] = md5(json_encode(array_column($gameClips, 'gameClipId'))) === $cache['hash']
         ? die('Nothing to update!')
-        : array_column($json, 'gameClipId');
+        : md5(json_encode(array_column($gameClips, 'gameClipId')));
 
-    foreach ($json as $item) {
-        if (!in_array($item['gameClipId'], $cache['gameClipIds'], false) &&
-            (in_array($item['titleName'], $options['xbox']['gameClipId'], false)
+    foreach ($gameClips as $gameClip) {
+        if (!in_array($gameClip['gameClipId'], $cache['gameClipIds'], false) &&
+            (in_array($gameClip['titleName'], $options['xbox']['gameClipId'], false)
                 || in_array('*', $options['xbox']['gameClipId'], false))
         ) {
             $cache['counter']++;
             $destination = $options['xbox']['file_format'] === 'original'
-                ? "{$item['gameClipId']}.mp4"
+                ? "{$gameClip['gameClipId']}.mp4"
                 : sprintf("{$options['xbox']['file_format']}.mp4", $cache['counter']);
-            $cache['gameClipIds'][] = $item['gameClipId'];
-            $uri = $item['gameClipUris']['0']['uri'];
-            echo "{$item['gameClipId']}->${destination}...\n";
+            $cache['gameClipIds'][] = $gameClip['gameClipId'];
+            $uri = $gameClip['gameClipUris']['0']['uri'];
+            echo "{$gameClip['gameClipId']}->${destination}...\n";
             if (!file_exists($options['xbox']['destination'])
                 && !mkdir($options['xbox']['destination'], 0777, true)
                 && !is_dir($options['xbox']['destination'])
@@ -94,7 +94,7 @@ try {
     }
 
     $Psr16Adapter->setMultiple([ //Save Cache
-        'json'        => $cache['json'],
+        'hash'        => $cache['hash'],
         'gameClipIds' => $cache['gameClipIds'],
         'counter'     => $cache['counter'],
     ], $date);
