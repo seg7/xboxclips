@@ -1,7 +1,6 @@
 #!/usr/bin/php
 <?php
 date_default_timezone_set('Europe/Lisbon');
-$date = new DateTime('2077-07-07T07:07:07Z');
 error_reporting(E_ALL & ~E_USER_DEPRECATED);
 
 define('BASE_PATH', realpath(dirname(realpath(__FILE__))));
@@ -32,7 +31,6 @@ use phpFastCache\Helper\Psr16Adapter;
 try {
     $Psr16Adapter = new Psr16Adapter('files', [ //Init cache
         'path'       => BASE_PATH . '/cache/',
-        'defaultTtl' => 86400,
     ]);
 
     echo "Downloading file list...\n";
@@ -99,7 +97,7 @@ try {
         'hash'        => $cache['hash'],
         'gameClipIds' => $cache['gameClipIds'],
         'counter'     => $cache['counter'],
-    ], $date);
+    ], 15552000);
 } catch (Exception | GuzzleException $e) {
     die($e->getMessage());
 }
