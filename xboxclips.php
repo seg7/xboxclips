@@ -31,6 +31,7 @@ use phpFastCache\Helper\Psr16Adapter;
 try {
     $Psr16Adapter = new Psr16Adapter('files', [ //Init cache
         'path'       => BASE_PATH . '/cache/',
+        'defaultTtl' => 15552000,
     ]);
 
     echo "Downloading file list...\n";
@@ -97,7 +98,7 @@ try {
         'hash'        => $cache['hash'],
         'gameClipIds' => $cache['gameClipIds'],
         'counter'     => $cache['counter'],
-    ], 15552000);
+    ]);
 } catch (Exception | GuzzleException $e) {
     die($e->getMessage());
 }
