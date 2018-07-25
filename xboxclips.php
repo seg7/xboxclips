@@ -79,7 +79,6 @@ try {
             $destination = $options['xbox']['file_format'] === 'original'
                 ? "{$gameClip['gameClipId']}.mp4"
                 : sprintf("{$options['xbox']['file_format']}.mp4", $cache['counter']);
-            $cache['gameClipIds'][] = $gameClip['gameClipId'];
             $uri = $gameClip['gameClipUris']['0']['uri'];
             echo "{$gameClip['gameClipId']}->${destination}...\n";
             if (!file_exists($options['xbox']['destination'])
@@ -89,7 +88,13 @@ try {
                 throw new \RuntimeException(sprintf('Directory "%s" was not created', $options['xbox']['destination']));
             }
             if (!file_exists($options['xbox']['destination'] . '/' . $destination)) {
-                file_put_contents($options['xbox']['destination'] . '/' . $destination, fopen($uri, 'rb'));
+                $transfer = file_put_contents($options['xbox']['destination'] . '/' . $destination, fopen($uri, 'rb'));
+                if(!$transfer) {
+                    $cache['hash'] = 'error';
+                    $cache['counter']--;
+                } else {
+                    $cache['gameClipIds'][] = $gameClip['gameClipId'];
+                }
             }
         }
     }
