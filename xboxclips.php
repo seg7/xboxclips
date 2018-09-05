@@ -3,17 +3,15 @@
 date_default_timezone_set('Europe/Lisbon');
 error_reporting(E_ALL & ~E_USER_DEPRECATED);
 
-define('BASE_PATH', realpath(dirname(realpath(__FILE__))));
-
-if (!file_exists(BASE_PATH . '/vendor')) {
+if (!file_exists(__DIR__ . '/vendor')) {
     die('Please use `composer install`.');
 }
 
-if (!file_exists(BASE_PATH . '/config/options.ini')) {
+if (!file_exists(__DIR__ . '/config/options.ini')) {
     die('In the config directory, copy the file `options.ini.dist` to `options.ini`.');
 }
 
-$options = parse_ini_file(BASE_PATH . '/config/options.ini', true);
+$options = parse_ini_file(__DIR__ . '/config/options.ini', true);
 
 if ($options['xbl.io']['apikey'] === 'APIKEY') {
     die('Add your key to options.ini under the apikey (APIKEY).');
@@ -23,14 +21,11 @@ if ($options['xbox']['destination'] === 'DIRECTORY') {
     die('Edit options.ini with the output path (DIRECTORY).');
 }
 
-require BASE_PATH . '/vendor/autoload.php';
-
-use GuzzleHttp\Exception\GuzzleException;
-use phpFastCache\Helper\Psr16Adapter;
+require __DIR__ . '/vendor/autoload.php';
 
 try {
-    $Psr16Adapter = new Psr16Adapter('files', [ //Init cache
-        'path'       => BASE_PATH . '/cache/',
+    $Psr16Adapter = new phpFastCache\Helper\Psr16Adapter('files', [ //Init cache
+        'path'       => __DIR__ . '/cache/',
         'defaultTtl' => 15552000,
     ]);
 
@@ -80,7 +75,7 @@ try {
                 ? "{$gameClip['gameClipId']}.mp4"
                 : sprintf("{$options['xbox']['file_format']}.mp4", $cache['counter']);
             $uri = $gameClip['gameClipUris']['0']['uri'];
-            echo "{$gameClip['gameClipId']}->${destination}...\n";
+            echo "{$gameClip['gameClipId']}->${destination}...";
             if (!file_exists($options['xbox']['destination'])
                 && !mkdir($options['xbox']['destination'], 0777, true)
                 && !is_dir($options['xbox']['destination'])
@@ -88,14 +83,20 @@ try {
                 throw new \RuntimeException(sprintf('Directory "%s" was not created', $options['xbox']['destination']));
             }
             if (!file_exists($options['xbox']['destination'] . '/' . $destination)) {
-                $transfer = file_put_contents($options['xbox']['destination'] . '/' . $destination, fopen($uri, 'rb'));
-                if(!$transfer) {
+                $handle = fopen($uri, 'rb');
+                $transfer = file_put_contents($options['xbox']['destination'] . '/' . $destination, $handle);
+                if(!$transfer || !$handle) {
+                    echo 'error...';
                     $cache['hash'] = 'error';
                     $cache['counter']--;
+                    if(file_exists($options['xbox']['destination'] . '/' . $destination)) {
+                        unlink($options['xbox']['destination'] . '/' . $destination);
+                    }
                 } else {
                     $cache['gameClipIds'][] = $gameClip['gameClipId'];
                 }
             }
+            echo "\n";
         }
     }
 
@@ -104,6 +105,6 @@ try {
         'gameClipIds' => $cache['gameClipIds'],
         'counter'     => $cache['counter'],
     ]);
-} catch (Exception | GuzzleException $e) {
+} catch (Exception | GuzzleHttp\Exception\GuzzleException $e) {
     die($e->getMessage());
 }
