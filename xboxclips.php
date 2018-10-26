@@ -87,7 +87,7 @@ try {
                 $transfer = file_put_contents($options['xbox']['destination'] . '/' . $destination, $handle);
                 //Verify file consistency
                 $output = shell_exec("/usr/local/bin/MP4Box -info {$options['xbox']['destination']}/{$destination} 2>&1");
-                if(strpos( $output, 'Error' ) == false) {
+                if(strpos( $output, 'Error' ) == true) {
                     echo 'error...';
                     $cache['hash'] = 'error';
                     $cache['counter']--;
