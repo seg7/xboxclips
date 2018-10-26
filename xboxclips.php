@@ -85,7 +85,9 @@ try {
             if (!file_exists($options['xbox']['destination'] . '/' . $destination)) {
                 $handle = fopen($uri, 'rb');
                 $transfer = file_put_contents($options['xbox']['destination'] . '/' . $destination, $handle);
-                if(!$transfer || !$handle) {
+                //Verify file consistency
+                $output = shell_exec("/usr/local/bin/MP4Box -info {$options['xbox']['destination']}/{$destination} 2>&1");
+                if(strpos( $output, 'Error' ) == false) {
                     echo 'error...';
                     $cache['hash'] = 'error';
                     $cache['counter']--;
