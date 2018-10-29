@@ -16,3 +16,6 @@ destination = DIRECTORY
 ; or use original for the xlive original filename
 file_format = %04s
 ;file_format = original
+
+[general]
+gpac_bin = /usr/local/bin/MP4Box
