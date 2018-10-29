@@ -17,5 +17,8 @@ destination = DIRECTORY
 file_format = %04s
 ;file_format = original
 
-[general]
-gpac_bin = /usr/local/bin/MP4Box
+[gpac]
+bin = /usr/local/bin/MP4Box
+args[] = -info
+;error search string
+search = Error

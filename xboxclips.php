@@ -21,7 +21,7 @@ if ($options['xbox']['destination'] === 'DIRECTORY') {
     die('Edit options.ini with the output path (DIRECTORY).');
 }
 
-if (!file_exists($options['general']['gpac_bin'])) {
+if (!file_exists($options['gpac']['bin'])) {
     die('Please install GPAC requirement or update option.ini with the correct location.');
 }
 
@@ -90,8 +90,10 @@ try {
                 $handle = fopen($uri, 'rb');
                 $transfer = file_put_contents($options['xbox']['destination'] . '/' . $destination, $handle);
                 //Verify file consistency
-                $output = shell_exec("{$options['general']['gpac_bin']} -info {$options['xbox']['destination']}/{$destination} 2>&1");
-                if(strpos( $output, 'Error' ) !== false) {
+                $output = shell_exec(
+                        "{$options['gpac']['bin']} ".implode(' ', $options['gpac']['args'])." {$options['xbox']['destination']}/{$destination} 2>&1"
+                );
+                if(strpos( $output, $options['gpac']['search'] ) !== false) {
                     echo 'error...';
                     $cache['hash'] = 'error';
                     $cache['counter']--;
