@@ -93,7 +93,7 @@ try {
                 $output = shell_exec(
                         "{$options['gpac']['bin']} ".implode(' ', $options['gpac']['args'])." {$options['xbox']['destination']}/{$destination} 2>&1"
                 );
-                if(strpos( $output, $options['gpac']['search'] ) !== false) {
+                if(strpos($output, $options['gpac']['search']) !== false) {
                     echo 'error...';
                     $cache['hash'] = 'error';
                     $cache['counter']--;
@@ -101,6 +101,7 @@ try {
                         unlink($options['xbox']['destination'] . '/' . $destination);
                     }
                 } else {
+                    echo 'ok...';
                     $cache['gameClipIds'][] = $gameClip['gameClipId'];
                 }
             }
