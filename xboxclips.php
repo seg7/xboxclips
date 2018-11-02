@@ -17,7 +17,7 @@ if ($options['xbl.io']['apikey'] === 'APIKEY') {
     die('Add your key to options.ini under the apikey (APIKEY).');
 }
 
-if ($options['xbox']['destination'] === 'DIRECTORY') {
+if ($options['download']['destination'] === 'DIRECTORY') {
     die('Edit options.ini with the output path (DIRECTORY).');
 }
 
@@ -75,31 +75,37 @@ try {
                 || in_array('*', $options['xbox']['gameClipId'], false))
         ) {
             $cache['counter']++;
-            $destination = $options['xbox']['file_format'] === 'original'
+            $retries = $options['download']['retries'];
+            $destination = $options['download']['file_format'] === 'original'
                 ? "{$gameClip['gameClipId']}.mp4"
-                : sprintf("{$options['xbox']['file_format']}.mp4", $cache['counter']);
+                : sprintf("{$options['download']['file_format']}.mp4", $cache['counter']);
             $uri = $gameClip['gameClipUris']['0']['uri'];
             echo "{$gameClip['gameClipId']}->${destination}...";
-            if (!file_exists($options['xbox']['destination'])
-                && !mkdir($options['xbox']['destination'], 0777, true)
-                && !is_dir($options['xbox']['destination'])
+            if (!file_exists($options['download']['destination'])
+                && !mkdir($options['download']['destination'], 0777, true)
+                && !is_dir($options['download']['destination'])
             ) {
-                throw new \RuntimeException(sprintf('Directory "%s" was not created', $options['xbox']['destination']));
+                throw new \RuntimeException(sprintf('Directory "%s" was not created', $options['download']['destination']));
             }
-            if (!file_exists($options['xbox']['destination'] . '/' . $destination)) {
+            if (!file_exists($options['download']['destination'] . '/' . $destination)) {
+                download:
                 $handle = fopen($uri, 'rb');
-                $transfer = file_put_contents($options['xbox']['destination'] . '/' . $destination, $handle);
+                $transfer = file_put_contents($options['download']['destination'] . '/' . $destination, $handle);
                 //Verify file consistency
                 $output = shell_exec(
-                        "{$options['gpac']['bin']} ".implode(' ', $options['gpac']['args'])." {$options['xbox']['destination']}/{$destination} 2>&1"
+                        "{$options['gpac']['bin']} ".implode(' ', $options['gpac']['args'])." {$options['download']['destination']}/{$destination} 2>&1"
                 );
                 if(strpos($output, $options['gpac']['search']) !== false) {
+                    if(file_exists($options['download']['destination'] . '/' . $destination)) {
+                        unlink($options['download']['destination'] . '/' . $destination);
+                    }
                     echo 'error...';
+                    if($retries--) {
+                        echo "retrying...";
+                        goto download;
+                    }
                     $cache['hash'] = 'error';
                     $cache['counter']--;
-                    if(file_exists($options['xbox']['destination'] . '/' . $destination)) {
-                        unlink($options['xbox']['destination'] . '/' . $destination);
-                    }
                 } else {
                     echo 'ok...';
                     $cache['gameClipIds'][] = $gameClip['gameClipId'];

@@ -10,6 +10,8 @@ gameClipId[] = *
 ;gameClipId[] = Destiny 2 - Beta
 ;gameClipId[] = Destiny 2
 
+[download]
+retries = 2
 ;use full path
 destination = DIRECTORY
 ;see https://secure.php.net/sprintf for format options, s the placeholder for an incremental counter,
