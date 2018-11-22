@@ -1,37 +1,18 @@
 #!/usr/bin/php
 <?php
-date_default_timezone_set('Europe/Lisbon');
-error_reporting(E_ALL & ~E_USER_DEPRECATED);
+use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
 
-if (!file_exists(__DIR__ . '/vendor')) {
-    die('Please use `composer install`.');
-}
-
-if (!file_exists(__DIR__ . '/config/options.ini')) {
-    die('In the config directory, copy the file `options.ini.dist` to `options.ini`.');
-}
-
-$options = parse_ini_file(__DIR__ . '/config/options.ini', true);
-
-if ($options['xbl.io']['apikey'] === 'APIKEY') {
-    die('Add your key to options.ini under the apikey (APIKEY).');
-}
-
-if ($options['download']['destination'] === 'DIRECTORY') {
-    die('Edit options.ini with the output path (DIRECTORY).');
-}
-
-if (!file_exists($options['gpac']['bin'])) {
-    die('Please install GPAC requirement or update option.ini with the correct location.');
-}
-
-require __DIR__ . '/vendor/autoload.php';
+include __DIR__ . '/includes/requirements.php';
 
 try {
     $Psr16Adapter = new phpFastCache\Helper\Psr16Adapter('files', [ //Init cache
         'path'       => __DIR__ . '/cache/',
-        'defaultTtl' => 15552000,
+        'defaultTtl' => 186624000,
     ]);
+
+    $log = new Logger('name');
+    $log->pushHandler(new StreamHandler(__DIR__ . '/log/xboxclips.log', Logger::DEBUG));
 
     echo "Downloading file list...\n";
 
@@ -48,10 +29,13 @@ try {
         ]);
 
         $gameClips = @json_decode($request->getBody(), true)['gameClips'];
+        $log->info('Downloading file list');
 
         if(null === $gameClips) {
+            $log->error('No valid JSON');
             sleep(5);
             $retries++;
+            $log->info('Retrying');
         }
     } while(--$retries > 0);
 
@@ -64,6 +48,13 @@ try {
         'gameClipIds' => $Psr16Adapter->get('gameClipIds', []),
         'counter'     => $Psr16Adapter->get('counter', 0),
     ];
+
+    $log->info('Cache', $cache);
+
+    $log->info('Hash', [
+        'cached' => $cache['hash'],
+        'hash'   => $hash,
+    ]);
 
     $cache['hash'] = $hash === $cache['hash']
         ? die('Nothing to update!')
@@ -81,6 +72,7 @@ try {
                 : sprintf("{$options['download']['file_format']}.mp4", $cache['counter']);
             $uri = $gameClip['gameClipUris']['0']['uri'];
             echo "{$gameClip['gameClipId']}->${destination}...";
+            $log->info("{$gameClip['gameClipId']}->${destination}");
             if (!file_exists($options['download']['destination'])
                 && !mkdir($options['download']['destination'], 0777, true)
                 && !is_dir($options['download']['destination'])
@@ -100,14 +92,17 @@ try {
                         unlink($options['download']['destination'] . '/' . $destination);
                     }
                     echo 'error...';
+                    $log->error('mp4 file inconsistent');
                     if($retries--) {
                         echo "retrying...";
+                        $log->info('Retrying');
                         goto download;
                     }
                     $cache['hash'] = 'error';
                     $cache['counter']--;
                 } else {
                     echo 'ok...';
+                    $log->info('File downloaded');
                     $cache['gameClipIds'][] = $gameClip['gameClipId'];
                 }
             }
@@ -120,6 +115,8 @@ try {
         'gameClipIds' => $cache['gameClipIds'],
         'counter'     => $cache['counter'],
     ]);
+    $log->info('Saving Cache', $cache);
 } catch (Exception | GuzzleHttp\Exception\GuzzleException $e) {
+    $log->error($e->getMessage());
     die($e->getMessage());
 }
