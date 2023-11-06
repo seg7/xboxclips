@@ -1,0 +1,13 @@
+version: "3.8"
+services:
+  php_xboxclips:
+    build:
+      context: ./docker/php
+      args:
+        - HOSTPATH=${PWD}
+    container_name: php_xboxclips
+    privileged: true
+    volumes:
+      - .:/app:rw,cached
+      - /Users/seg7/Seafile/Destiny/clips:/app/out
+    working_dir: /app

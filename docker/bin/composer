@@ -1,0 +1,6 @@
+#!/bin/bash
+self=$(basename "$0")
+root=$(dirname "${0%/*/*}")
+workdir="/app/$(grealpath --relative-to="$root" "${PWD}")"
+service="php_$(basename "$root")"
+docker compose -f "$root/docker-compose.yml" run -w "$workdir" "$service" "$self" "$@"
