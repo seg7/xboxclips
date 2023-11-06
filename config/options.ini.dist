@@ -13,7 +13,7 @@ gameClipId[] = *
 [download]
 retries = 2
 ;use full path
-destination = DIRECTORY
+destination = /app/out
 ;see https://secure.php.net/sprintf for format options, s the placeholder for an incremental counter,
 ; or use original for the xlive original filename
 file_format = %04s

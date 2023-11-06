@@ -1,7 +1,10 @@
 FROM php:8.2-cli-bookworm
 MAINTAINER Sergio Vale <segseven@gmail.com>
 
+RUN mkdir -p /app
 WORKDIR /app
+#COPY composer.json .
+#COPY composer.lock .
 
 ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
 
@@ -22,5 +25,8 @@ RUN cp /usr/local/etc/php/php.ini-development /usr/local/etc/php/php.ini
 ADD conf.d /usr/local/etc/php/conf.d/
 RUN sed -Eie 's|memory_limit = 128M|memory_limit = 256M|g' /usr/local/etc/php/php.ini
 RUN sed -i -r "s|%hostpath%|${HOSTPATH}|g" /usr/local/etc/php/conf.d/xdebug.ini
+
+#ENV COMPOSER_ALLOW_SUPERUSER=1
+#RUN composer install --no-dev --no-interaction --no-autoloader --no-scripts
 
 EXPOSE 9000
