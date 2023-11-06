@@ -3,9 +3,9 @@ A simple php script do download all your saved clips from Xbox Live. It picks up
 
 ### Project dependencies:
 
-* PHP >= 7.1
+* PHP >= 8.2
 * [Composer](https://getcomposer.org)
-* [GPAC](https://github.com/gpac/gpac)
+* [FFMPG](https://www.ffmpeg.org/)
 
 ### Setup the configuration
 
@@ -14,6 +14,7 @@ A simple php script do download all your saved clips from Xbox Live. It picks up
 3. Visit the [XBOX LIVE API](https://xbl.io/) to sign up for an API key
 4. Add your key to `options.ini` under the `apikey`
 5. `composer install`
+6. `cd src`
 6. `php xboxclips.php`
 
 ![Output](https://github.com/seg7/xboxclips/blob/master/ouput.png?raw=true)
