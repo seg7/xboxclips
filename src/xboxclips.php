@@ -1,18 +1,27 @@
 #!/usr/bin/php
 <?php
+
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
+use Phpfastcache\Helper\Psr16Adapter;
+use Phpfastcache\CacheManager;
+use Phpfastcache\Config\ConfigurationOption;
 
 include __DIR__ . '/includes/requirements.php';
 
+global $options;
+
 try {
-    $Psr16Adapter = new phpFastCache\Helper\Psr16Adapter('files', [ //Init cache
-        'path'       => __DIR__ . '/cache/',
+    CacheManager::setDefaultConfig(new ConfigurationOption([
+        'path'       => __DIR__ . '/../cache/',
         'defaultTtl' => 186624000,
-    ]);
+    ]));
+
+    $Psr16Adapter = new Psr16Adapter('files' //Init cache
+    );
 
     $log = new Logger('name');
-    $log->pushHandler(new StreamHandler(__DIR__ . '/log/xboxclips.log', Logger::DEBUG));
+    $log->pushHandler(new StreamHandler(__DIR__ . '/../log/xboxclips.log', Logger::DEBUG));
 
     echo "Downloading file list...\n";
 
@@ -28,20 +37,20 @@ try {
             ]
         ]);
 
-        $gameClips = @json_decode($request->getBody(), true)['gameClips'];
+        $gameClips = @json_decode($request->getBody(), true)['values'];
         $log->info('Downloading file list');
 
         if(null === $gameClips) {
             $log->error('No valid JSON');
             sleep(5);
-            $retries++;
+            echo 'retrying...';
             $log->info('Retrying');
         }
     } while(--$retries > 0);
 
     $gameClips = null === $gameClips ? die('No valid JSON.') : array_reverse($gameClips);
 
-    $hash = md5(json_encode(array_column($gameClips, 'gameClipId'))); //Request Hash
+    $hash = md5(json_encode(array_column($gameClips, 'contentId'))); //Request Hash
 
     $cache = [ //Get Cache
         'hash'        => $Psr16Adapter->get('hash', ''),
@@ -61,9 +70,9 @@ try {
         : $hash;
 
     foreach ($gameClips as $gameClip) {
-        if (!in_array($gameClip['gameClipId'], $cache['gameClipIds'], false) &&
-            (in_array($gameClip['titleName'], $options['xbox']['gameClipId'], false)
-                || in_array('*', $options['xbox']['gameClipId'], false))
+        if (!in_array($gameClip['contentId'], $cache['gameClipIds']) &&
+            (in_array($gameClip['titleName'], $options['xbox']['gameClipId'])
+                || in_array('*', $options['xbox']['gameClipId']))
         ) {
             $cache['counter']++;
             $retries = $options['download']['retries'];
@@ -71,13 +80,13 @@ try {
                 ? "{$gameClip['gameClipId']}.mp4"
                 : sprintf("{$options['download']['file_format']}.mp4", $cache['counter']);
             $uri = $gameClip['gameClipUris']['0']['uri'];
-            echo "{$gameClip['gameClipId']}->${destination}...";
-            $log->info("{$gameClip['gameClipId']}->${destination}");
+            echo "{$gameClip['gameClipId']}->$destination...";
+            $log->info("{$gameClip['gameClipId']}->$destination");
             if (!file_exists($options['download']['destination'])
                 && !mkdir($options['download']['destination'], 0777, true)
                 && !is_dir($options['download']['destination'])
             ) {
-                throw new \RuntimeException(sprintf('Directory "%s" was not created', $options['download']['destination']));
+                throw new RuntimeException(sprintf('Directory "%s" was not created', $options['download']['destination']));
             }
             if (!file_exists($options['download']['destination'] . '/' . $destination)) {
                 download:
@@ -85,16 +94,16 @@ try {
                 $transfer = file_put_contents($options['download']['destination'] . '/' . $destination, $handle);
                 //Verify file consistency
                 $output = shell_exec(
-                        "{$options['gpac']['bin']} ".implode(' ', $options['gpac']['args'])." {$options['download']['destination']}/{$destination} 2>&1"
+                        "{$options['ffmpg']['bin']} ".implode(' ', $options['ffmpg']['args'])." {$options['download']['destination']}/$destination 2 2>/dev/null && echo 'OK' || echo 'ERROR'"
                 );
-                if(strpos($output, $options['gpac']['search']) !== false) {
+                if(str_contains($output, $options['ffmpg']['search'])) {
                     if(file_exists($options['download']['destination'] . '/' . $destination)) {
                         unlink($options['download']['destination'] . '/' . $destination);
                     }
                     echo 'error...';
                     $log->error('mp4 file inconsistent');
                     if($retries--) {
-                        echo "retrying...";
+                        echo 'retrying...';
                         $log->info('Retrying');
                         goto download;
                     }

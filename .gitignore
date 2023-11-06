@@ -1,5 +1,9 @@
 .idea
 vendor
-cache
 /config/options.ini
-/log/xboxclips.log
+/log/
+!/log/.gitkeep
+/cache/
+!/cache/.gitkeep
+/out/
+!/out/.gitkeep
