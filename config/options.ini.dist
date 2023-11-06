@@ -19,8 +19,8 @@ destination = DIRECTORY
 file_format = %04s
 ;file_format = original
 
-[gpac]
-bin = /usr/local/bin/MP4Box
-args[] = -info
+[ffmpg]
+bin = /usr/bin/ffprobe
+args[] = -v error
 ;error search string
-search = Error
+search = ERROR
